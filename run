@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+
+function coverage() {
+  go test -coverpkg=./... -coverprofile=coverage.out ./...
+  go tool cover -html=coverage.out
+}
+
+function test() {
+  go test ./... -v
+}
+
+function mocks() {
+  rm -f ./mocks/*
+  mockery --dir=./ --name=LogError
+}
+
+case "$1" in
+coverage)
+  coverage
+  ;;
+lint)
+  golangci-lint run
+  ;;
+mocks)
+  mocks
+  ;;
+test)
+  test
+  ;;
+*)
+  echo "Commands: coverage, lint, mocks, test"
+  ;;
+esac
