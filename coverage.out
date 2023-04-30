@@ -1,0 +1,19 @@
+mode: set
+github.com/jimenezmaximiliano/talkback/talkback.go:19.46,23.2 1 1
+github.com/jimenezmaximiliano/talkback/talkback.go:26.107,28.2 1 1
+github.com/jimenezmaximiliano/talkback/talkback.go:31.99,34.2 2 0
+github.com/jimenezmaximiliano/talkback/talkback.go:37.101,40.58 2 1
+github.com/jimenezmaximiliano/talkback/talkback.go:40.58,43.3 2 0
+github.com/jimenezmaximiliano/talkback/talkback.go:47.76,49.2 1 0
+github.com/jimenezmaximiliano/talkback/talkback.go:52.81,54.2 1 0
+github.com/jimenezmaximiliano/talkback/talkback.go:57.101,61.58 3 1
+github.com/jimenezmaximiliano/talkback/talkback.go:61.58,64.3 2 0
+github.com/jimenezmaximiliano/talkback/talkback.go:69.115,78.16 4 1
+github.com/jimenezmaximiliano/talkback/talkback.go:78.16,81.3 2 0
+github.com/jimenezmaximiliano/talkback/talkback.go:83.2,83.61 1 1
+github.com/jimenezmaximiliano/talkback/talkback.go:83.61,86.3 2 0
+github.com/jimenezmaximiliano/talkback/talkback.go:89.63,91.2 1 1
+github.com/jimenezmaximiliano/talkback/mocks/LogError.go:13.40,15.2 1 0
+github.com/jimenezmaximiliano/talkback/mocks/LogError.go:23.66,27.19 3 1
+github.com/jimenezmaximiliano/talkback/mocks/LogError.go:27.19,27.49 1 1
+github.com/jimenezmaximiliano/talkback/mocks/LogError.go:29.2,29.13 1 1
