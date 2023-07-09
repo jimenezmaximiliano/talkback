@@ -22,45 +22,15 @@ func NewTalkback(logError LogError) Talkback {
 	}
 }
 
-// RedirectTo responds to an HTTP request with a temporary redirection to the given URL.
-func (service Talkback) RedirectTo(responseWriter http.ResponseWriter, request *http.Request, url string) {
-	http.Redirect(responseWriter, request, url, http.StatusTemporaryRedirect)
-}
-
-// LogInternalErrorAndRespond logs an error as Error and responds with a 500.
-func (service Talkback) LogInternalErrorAndRespond(responseWriter http.ResponseWriter, err error) {
-	service.logError(err)
-	responseWriter.WriteHeader(http.StatusInternalServerError)
-}
-
 // RespondSuccessWithJSON responds to an HTTP request with a 200 and the given JSON body.
 func (service Talkback) RespondSuccessWithJSON(responseWriter http.ResponseWriter, JSONBody []byte) {
 	setContentTypeToJSON(responseWriter)
 
 	if _, err := responseWriter.Write(JSONBody); err != nil {
-		service.LogInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to respond with JSON body"))
+		service.logInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to respond with JSON body"))
+
 		return
 	}
-}
-
-// RespondSuccess responds to an HTTP request with a 200.
-func (service Talkback) RespondSuccess(responseWriter http.ResponseWriter) {
-	responseWriter.WriteHeader(http.StatusOK)
-}
-
-// RespondBadRequest responds to an HTTP request with a 400.
-func (service Talkback) RespondBadRequest(responseWriter http.ResponseWriter) {
-	responseWriter.WriteHeader(http.StatusBadRequest)
-}
-
-// RespondMethodNotAllowed responds to an HTTP request with a 405.
-func (service Talkback) RespondMethodNotAllowed(responseWriter http.ResponseWriter) {
-	responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-}
-
-// RespondUnauthorized responds to an HTTP request with a 401.
-func (service Talkback) RespondUnauthorized(responseWriter http.ResponseWriter) {
-	responseWriter.WriteHeader(http.StatusUnauthorized)
 }
 
 // RespondCreatedWithJSON responds to an HTTP request with a 201 and the given JSON body.
@@ -69,7 +39,8 @@ func (service Talkback) RespondCreatedWithJSON(responseWriter http.ResponseWrite
 	responseWriter.WriteHeader(http.StatusCreated)
 
 	if _, err := responseWriter.Write(JSONBody); err != nil {
-		service.LogInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to respond with JSON body"))
+		service.logInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to respond with JSON body"))
+
 		return
 	}
 }
@@ -86,16 +57,24 @@ func (service Talkback) RespondWithBadRequestJSONMessage(responseWriter http.Res
 		Error: errorMessage,
 	})
 	if err != nil {
-		service.LogInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to marshal JSON response"))
+		service.logInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to marshal JSON response"))
+
 		return
 	}
 
 	if _, err := responseWriter.Write(JSONPayload); err != nil {
-		service.LogInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to respond with JSON body"))
+		service.logInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to respond with JSON body"))
+
 		return
 	}
 }
 
 func setContentTypeToJSON(responseWriter http.ResponseWriter) {
 	responseWriter.Header().Set("Content-Type", "application/json")
+}
+
+// logInternalErrorAndRespond logs an error as Error and responds with a 500.
+func (service Talkback) logInternalErrorAndRespond(responseWriter http.ResponseWriter, err error) {
+	service.logError(err)
+	responseWriter.WriteHeader(http.StatusInternalServerError)
 }
