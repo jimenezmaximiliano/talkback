@@ -48,6 +48,11 @@ func (service Talkback) RespondSuccess(responseWriter http.ResponseWriter) {
 	responseWriter.WriteHeader(http.StatusOK)
 }
 
+// RespondMethodNotAllowed responds to an HTTP request with a 405.
+func (service Talkback) RespondMethodNotAllowed(responseWriter http.ResponseWriter) {
+	responseWriter.WriteHeader(http.StatusMethodNotAllowed)
+}
+
 // RespondUnauthorized responds to an HTTP request with a 401.
 func (service Talkback) RespondUnauthorized(responseWriter http.ResponseWriter) {
 	responseWriter.WriteHeader(http.StatusUnauthorized)
