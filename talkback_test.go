@@ -1,6 +1,7 @@
 package talkback_test
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -22,7 +23,7 @@ func TestRespondingWithACreatedJSON(test *testing.T) {
 	responseRecorder := httptest.NewRecorder()
 	talk := talkback.NewTalkback(errorLoggerFunc.Execute)
 
-	talk.RespondCreatedWithJSON(responseRecorder, jsonBody)
+	talk.RespondCreatedWithJSON(context.Background(), responseRecorder, jsonBody)
 
 	response := responseRecorder.Result()
 	body, err := io.ReadAll(response.Body)
@@ -40,7 +41,7 @@ func TestRespondingWithOkJSON(test *testing.T) {
 	responseRecorder := httptest.NewRecorder()
 	talk := talkback.NewTalkback(errorLoggerFunc.Execute)
 
-	talk.RespondSuccessWithJSON(responseRecorder, jsonBody)
+	talk.RespondSuccessWithJSON(context.Background(), responseRecorder, jsonBody)
 
 	response := responseRecorder.Result()
 	body, err := io.ReadAll(response.Body)
@@ -58,7 +59,7 @@ func TestRespondingWithBadRequestJSONMessage(test *testing.T) {
 	responseRecorder := httptest.NewRecorder()
 	talk := talkback.NewTalkback(errorLoggerFunc.Execute)
 
-	talk.RespondWithBadRequestJSONMessage(responseRecorder, "error message")
+	talk.RespondWithBadRequestJSONMessage(context.Background(), responseRecorder, "error message")
 
 	response := responseRecorder.Result()
 	body, err := io.ReadAll(response.Body)
