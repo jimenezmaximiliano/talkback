@@ -1,6 +1,7 @@
 package talkback
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -8,7 +9,7 @@ import (
 )
 
 // LogError represents a function that can log errors.
-type LogError func(err error)
+type LogError func(ctx context.Context, err error)
 
 // Talkback is a service that provides helper functions to respond to http requests.
 type Talkback struct {
@@ -23,23 +24,39 @@ func NewTalkback(logError LogError) Talkback {
 }
 
 // RespondSuccessWithJSON responds to an HTTP request with a 200 and the given JSON body.
-func (service Talkback) RespondSuccessWithJSON(responseWriter http.ResponseWriter, JSONBody []byte) {
+func (service Talkback) RespondSuccessWithJSON(
+	ctx context.Context,
+	responseWriter http.ResponseWriter,
+	JSONBody []byte,
+) {
 	setContentTypeToJSON(responseWriter)
 
 	if _, err := responseWriter.Write(JSONBody); err != nil {
-		service.logInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to respond with JSON body"))
+		service.logInternalErrorAndRespond(
+			ctx,
+			responseWriter,
+			errors.Wrap(err, "failed to respond with JSON body"),
+		)
 
 		return
 	}
 }
 
 // RespondCreatedWithJSON responds to an HTTP request with a 201 and the given JSON body.
-func (service Talkback) RespondCreatedWithJSON(responseWriter http.ResponseWriter, JSONBody []byte) {
+func (service Talkback) RespondCreatedWithJSON(
+	ctx context.Context,
+	responseWriter http.ResponseWriter,
+	JSONBody []byte,
+) {
 	setContentTypeToJSON(responseWriter)
 	responseWriter.WriteHeader(http.StatusCreated)
 
 	if _, err := responseWriter.Write(JSONBody); err != nil {
-		service.logInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to respond with JSON body"))
+		service.logInternalErrorAndRespond(
+			ctx,
+			responseWriter,
+			errors.Wrap(err, "failed to respond with JSON body"),
+		)
 
 		return
 	}
@@ -47,7 +64,11 @@ func (service Talkback) RespondCreatedWithJSON(responseWriter http.ResponseWrite
 
 // RespondWithBadRequestJSONMessage responds to an HTTP request with a 400 and a JSON payload with the error message provided.
 // In case of an error while responding, it logs an internal error and responds with a 500.
-func (service Talkback) RespondWithBadRequestJSONMessage(responseWriter http.ResponseWriter, errorMessage string) {
+func (service Talkback) RespondWithBadRequestJSONMessage(
+	ctx context.Context,
+	responseWriter http.ResponseWriter,
+	errorMessage string,
+) {
 	setContentTypeToJSON(responseWriter)
 	responseWriter.WriteHeader(http.StatusBadRequest)
 
@@ -57,13 +78,21 @@ func (service Talkback) RespondWithBadRequestJSONMessage(responseWriter http.Res
 		Error: errorMessage,
 	})
 	if err != nil {
-		service.logInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to marshal JSON response"))
+		service.logInternalErrorAndRespond(
+			ctx,
+			responseWriter,
+			errors.Wrap(err, "failed to marshal JSON response"),
+		)
 
 		return
 	}
 
 	if _, err := responseWriter.Write(JSONPayload); err != nil {
-		service.logInternalErrorAndRespond(responseWriter, errors.Wrap(err, "failed to respond with JSON body"))
+		service.logInternalErrorAndRespond(
+			ctx,
+			responseWriter,
+			errors.Wrap(err, "failed to respond with JSON body"),
+		)
 
 		return
 	}
@@ -74,7 +103,7 @@ func setContentTypeToJSON(responseWriter http.ResponseWriter) {
 }
 
 // logInternalErrorAndRespond logs an error as Error and responds with a 500.
-func (service Talkback) logInternalErrorAndRespond(responseWriter http.ResponseWriter, err error) {
-	service.logError(err)
+func (service Talkback) logInternalErrorAndRespond(ctx context.Context, responseWriter http.ResponseWriter, err error) {
+	service.logError(ctx, err)
 	responseWriter.WriteHeader(http.StatusInternalServerError)
 }
