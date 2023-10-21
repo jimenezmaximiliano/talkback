@@ -11,99 +11,36 @@ import (
 // LogError represents a function that can log errors.
 type LogError func(ctx context.Context, err error)
 
-// Talkback is a service that provides helper functions to respond to http requests.
-type Talkback struct {
-	logError LogError
-}
-
-// NewTalkback is a constructor for the Talkback service.
-func NewTalkback(logError LogError) Talkback {
-	return Talkback{
-		logError: logError,
-	}
-}
-
-// RespondSuccessWithJSON responds to an HTTP request with a 200 and the given JSON body.
-func (service Talkback) RespondSuccessWithJSON(
+// RespondWithJSON responds to an HTTP request with the given JSON body.
+func RespondWithJSON(
 	ctx context.Context,
+	logError LogError,
 	responseWriter http.ResponseWriter,
-	JSONBody []byte,
+	statusCode int,
+	payload any,
 ) {
-	setContentTypeToJSON(responseWriter)
-
-	if _, err := responseWriter.Write(JSONBody); err != nil {
-		service.logInternalErrorAndRespond(
-			ctx,
-			responseWriter,
-			errors.Wrap(err, "failed to respond with JSON body"),
-		)
-
-		return
-	}
-}
-
-// RespondCreatedWithJSON responds to an HTTP request with a 201 and the given JSON body.
-func (service Talkback) RespondCreatedWithJSON(
-	ctx context.Context,
-	responseWriter http.ResponseWriter,
-	JSONBody []byte,
-) {
-	setContentTypeToJSON(responseWriter)
-	responseWriter.WriteHeader(http.StatusCreated)
-
-	if _, err := responseWriter.Write(JSONBody); err != nil {
-		service.logInternalErrorAndRespond(
-			ctx,
-			responseWriter,
-			errors.Wrap(err, "failed to respond with JSON body"),
-		)
-
-		return
-	}
-}
-
-// RespondWithBadRequestJSONMessage responds to an HTTP request with a 400 and a JSON payload with the error message provided.
-// In case of an error while responding, it logs an internal error and responds with a 500.
-func (service Talkback) RespondWithBadRequestJSONMessage(
-	ctx context.Context,
-	responseWriter http.ResponseWriter,
-	errorMessage string,
-) {
-	setContentTypeToJSON(responseWriter)
-	responseWriter.WriteHeader(http.StatusBadRequest)
-
-	JSONPayload, err := json.Marshal(struct {
-		Error string `json:"error"`
-	}{
-		Error: errorMessage,
-	})
+	body, err := json.Marshal(payload)
 	if err != nil {
-		service.logInternalErrorAndRespond(
-			ctx,
-			responseWriter,
-			errors.Wrap(err, "failed to marshal JSON response"),
-		)
+		logError(ctx, errors.Wrap(err, "failed to marshal JSON response"))
+		responseWriter.WriteHeader(http.StatusInternalServerError)
 
 		return
 	}
 
-	if _, err := responseWriter.Write(JSONPayload); err != nil {
-		service.logInternalErrorAndRespond(
-			ctx,
-			responseWriter,
-			errors.Wrap(err, "failed to respond with JSON body"),
-		)
+	if string(body) == "null" {
+		logError(ctx, errors.New("marshalled body was null"))
+		responseWriter.WriteHeader(http.StatusInternalServerError)
 
 		return
 	}
-}
 
-func setContentTypeToJSON(responseWriter http.ResponseWriter) {
 	responseWriter.Header().Set("Content-Type", "application/json")
-}
+	responseWriter.WriteHeader(statusCode)
 
-// logInternalErrorAndRespond logs an error as Error and responds with a 500.
-func (service Talkback) logInternalErrorAndRespond(ctx context.Context, responseWriter http.ResponseWriter, err error) {
-	service.logError(ctx, err)
-	responseWriter.WriteHeader(http.StatusInternalServerError)
+	if _, err := responseWriter.Write(body); err != nil {
+		logError(ctx, errors.Wrap(err, "failed to write JSON body to response"))
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
 }

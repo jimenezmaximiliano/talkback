@@ -8,40 +8,26 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/jimenezmaximiliano/talkback"
 	"github.com/jimenezmaximiliano/talkback/mocks"
 )
 
-var jsonBody = []byte("{ \"property\": \"value\" }")
-
-func TestRespondingWithACreatedJSON(test *testing.T) {
-	test.Parallel()
-
-	errorLoggerFunc := mocks.NewLogError(test)
-	responseRecorder := httptest.NewRecorder()
-	talk := talkback.NewTalkback(errorLoggerFunc.Execute)
-
-	talk.RespondCreatedWithJSON(context.Background(), responseRecorder, jsonBody)
-
-	response := responseRecorder.Result()
-	body, err := io.ReadAll(response.Body)
-	require.NoError(test, err)
-
-	assert.Equal(test, http.StatusCreated, response.StatusCode)
-	assert.Equal(test, "application/json", response.Header.Get("Content-Type"))
-	assert.Equal(test, jsonBody, body)
+var payload = struct {
+	Message string
+}{
+	Message: "talkback",
 }
 
-func TestRespondingWithOkJSON(test *testing.T) {
+func TestRespondingWithJSON(test *testing.T) {
 	test.Parallel()
 
 	errorLoggerFunc := mocks.NewLogError(test)
 	responseRecorder := httptest.NewRecorder()
-	talk := talkback.NewTalkback(errorLoggerFunc.Execute)
 
-	talk.RespondSuccessWithJSON(context.Background(), responseRecorder, jsonBody)
+	talkback.RespondWithJSON(context.Background(), errorLoggerFunc.Execute, responseRecorder, http.StatusOK, payload)
 
 	response := responseRecorder.Result()
 	body, err := io.ReadAll(response.Body)
@@ -49,23 +35,22 @@ func TestRespondingWithOkJSON(test *testing.T) {
 
 	assert.Equal(test, http.StatusOK, response.StatusCode)
 	assert.Equal(test, "application/json", response.Header.Get("Content-Type"))
-	assert.Equal(test, jsonBody, body)
+	assert.JSONEq(test, `{"Message":"talkback"}`, string(body))
 }
 
-func TestRespondingWithBadRequestJSONMessage(test *testing.T) {
+func TestRespondingWithJSONFails(test *testing.T) {
 	test.Parallel()
 
 	errorLoggerFunc := mocks.NewLogError(test)
 	responseRecorder := httptest.NewRecorder()
-	talk := talkback.NewTalkback(errorLoggerFunc.Execute)
+	errorLoggerFunc.
+		On("Execute", mock.Anything, mock.Anything).
+		Return().
+		Once()
 
-	talk.RespondWithBadRequestJSONMessage(context.Background(), responseRecorder, "error message")
+	talkback.RespondWithJSON(context.Background(), errorLoggerFunc.Execute, responseRecorder, http.StatusOK, nil)
 
 	response := responseRecorder.Result()
-	body, err := io.ReadAll(response.Body)
-	require.NoError(test, err)
 
-	assert.Equal(test, http.StatusBadRequest, response.StatusCode)
-	assert.Equal(test, "application/json", response.Header.Get("Content-Type"))
-	assert.Equal(test, "{\"error\":\"error message\"}", string(body))
+	assert.Equal(test, http.StatusInternalServerError, response.StatusCode)
 }
